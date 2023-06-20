@@ -1,3 +1,4 @@
+import pandas as pd
 from tkinter import messagebox
 from tkinter import *
 
@@ -89,6 +90,46 @@ def UpdateEmployees():
         employeeData.grid(row=currentRow, column=currentCol)
         print(processed_employees_list[currentRow-1][currentCol])
 
+# Calculate Employee Salary
+def CalculateSalary(daily_rate, days_worked, overtime_rate, overtime_hours):
+    base_salary = daily_rate * days_worked
+    overtime_salary = overtime_rate * overtime_hours
+    total_salary = base_salary + overtime_salary
+    return base_salary, overtime_salary, total_salary
+
+# Compute Payslips of Employees
+def ComputePayslip():
+    payslip_data = pd.DataFrame()
+
+    for employee in processed_employees_list:
+        lastName = employee[0]
+        firstName = employee[1]
+        dailyRate = float(employee[2])
+        overtimeRate = float(employee[3])
+        daysWorked = float(employee[4])
+        overtimeHours = float(employee[5])
+
+        baseSalary, overtimeSalary, totalSalary = CalculateSalary(dailyRate, daysWorked, overtimeRate, overtimeHours)
+
+        payslip = {
+            'Last Name': lastName,
+            'First Name': firstName,
+            'Daily Rate': dailyRate,
+            'Overtime Rate': overtimeRate,
+            'Days Worked': daysWorked,
+            'Overtime Hours': overtimeHours,
+            'Base Salary': baseSalary,
+            'Overtime Salary': overtimeSalary,
+            'Total Salary': totalSalary
+        }
+
+        payslip_data = payslip_data.append(payslip, ignore_index=True)
+
+    output_file = 'payslips.xlsx'
+    payslip_data.to_excel(output_file, index=False)
+    messagebox.showinfo("Success", f"Payslips generated and saved in {output_file}.")
+
+
 # Main GUI Window
 window = Tk()
 window.title("Vast Solutions Payroll Calculator")
@@ -111,6 +152,9 @@ daysWorkedTitle.grid(row=0, column=4, sticky=W)
 overtimeHoursTitle = Label(resultFrame, text="Overtime Hours", bg="white smoke", fg="black", font="none 12 bold")
 overtimeHoursTitle.grid(row=0, column=5, sticky=W)
 
+# Compute Payslip Button
+computePayslipButton = Button(window, text="Generate Payslip", command=ComputePayslip, relief="raised")
+computePayslipButton.grid(row=2, column=0, sticky=W)
 
 # Employee Processing Frame
 employeeProcessingFrame = Frame(window, bg="white smoke", pady=10)
