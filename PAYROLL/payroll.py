@@ -30,29 +30,45 @@ def InitializeEmployees():
     employeeLastName.config(text=employees_list[0][0])
     employeeFirstName.config(text=employees_list[0][1])
 
+# Process Employee with Input Data
 def ProcessEmployee():
-    if employees_list:
-        if len(dailyRateEntry.get()) != 0:
-            if len(overtimeRateEntry.get()) != 0:
+    if employees_list: # Check if there are employees left to process
+        if len(dailyRateEntry.get()) != 0: # Check if user entered daily rate
+            if len(overtimeRateEntry.get()) != 0: # Check if user entered overtime rate
 
+                # Place user input into an employee entry
                 employee = []
-                employee.append(employees_list[0][0])
-                employee.append(employees_list[0][1])
-                employee.append(dailyRateEntry.get())
-                employee.append(overtimeRateEntry.get())
-                employee.append(daysWorkedVar.get())
-                employee.append(overtimeHoursEntry.get())
+                employee.append(employees_list[0][0]) # Last Name
+                employee.append(employees_list[0][1]) # First Name
+                employee.append(dailyRateEntry.get()) # Daily Rate
+                employee.append(overtimeRateEntry.get()) # Overtime Hourly Rate
+                employee.append(daysWorkedVar.get()) # Days Worked
+                employee.append(overtimeHoursEntry.get()) # Overtime Hours Rendered
 
-                processed_employees_list.append(employee)
-                employees_list.pop(0)
+                # Process employee entry
+                processed_employees_list.append(employee) # Add entry to list of processed employees
+                employees_list.pop(0) # Remove processed employee from unprocessed employees list
+
+                # Clear user input
                 dailyRateEntry.delete(0,END)
                 overtimeRateEntry.delete(0,END)
                 daysWorkedVar.set(0)
                 overtimeHoursEntry.delete(0,END)
                 overtimeHoursEntry.insert(0, 0)
+
+                # Check if there are employees left
                 if employees_list:
+                    # Update displayed employee to process to next employee
                     employeeLastName.config(text=employees_list[0][0])
                     employeeFirstName.config(text=employees_list[0][1])
+
+                # If all employees have been processed
+                else:
+                    # Update displayed employee to N/A
+                    employeeLastName.config(text="N/A")
+                    employeeFirstName.config(text="")
+
+                # Update displayed processed employees
                 UpdateEmployees()
 
             else:
@@ -62,9 +78,12 @@ def ProcessEmployee():
     else:
         messagebox.showinfo("Error", "All employees have been processed")
 
+# Update Table of Processed Employees
 def UpdateEmployees():
-    currentRow = len(processed_employees_list)
-    for currentCol in range(6):
+    currentRow = len(processed_employees_list) # Get most recent index from list of processed employees
+    # Iterate through employee's data
+    for currentCol in range(6): 
+        # Generate labels to display employee's data
         employeeData = Label(resultFrame)
         employeeData.config(text=processed_employees_list[currentRow-1][currentCol])
         employeeData.grid(row=currentRow, column=currentCol)
@@ -74,11 +93,11 @@ def UpdateEmployees():
 window = Tk()
 window.title("Vast Solutions Payroll Calculator")
 window.configure(background="white smoke", padx=10)
-window.geometry("1000x500")
+window.geometry("700x700")
 
 # Payroll Result Frame
-resultFrame = Frame(window, bg="white smoke")
-resultFrame.grid(row=0, column=0, sticky=NW)
+resultFrame = Frame(window, bg="white smoke", padx=10, pady=10)
+resultFrame.grid(row=1, column=0, sticky=W)
 lastNameTitle = Label(resultFrame, text="Last Name", bg="white smoke", fg="black", font="none 12 bold")
 lastNameTitle.grid(row=0, column=0, sticky=W)
 firstNameTitle = Label(resultFrame, text="First Name", bg="white smoke", fg="black", font="none 12 bold")
@@ -94,8 +113,8 @@ overtimeHoursTitle.grid(row=0, column=5, sticky=W)
 
 
 # Employee Processing Frame
-employeeProcessingFrame = Frame(window, bg="white smoke", padx=10)
-employeeProcessingFrame.grid(row=0, column=1, sticky=E)
+employeeProcessingFrame = Frame(window, bg="white smoke", pady=10)
+employeeProcessingFrame.grid(row=0, column=0, sticky=W)
 
 # Title Frame
 titleFrame = Frame(employeeProcessingFrame, bg="white smoke")
