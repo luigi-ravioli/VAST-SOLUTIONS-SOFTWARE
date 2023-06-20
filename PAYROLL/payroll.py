@@ -19,7 +19,6 @@ processed_employees_list = []
 
 # Initialize List of Employees
 def InitializeEmployees():
-
     # Get list of employees from text file
     employees_file = open("PAYROLL\employees.txt", "r")
     for employee in employees_file:
@@ -36,7 +35,6 @@ def ProcessEmployee():
     if employees_list: # Check if there are employees left to process
         if len(dailyRateEntry.get()) != 0: # Check if user entered daily rate
             if len(overtimeRateEntry.get()) != 0: # Check if user entered overtime rate
-
                 # Place user input into an employee entry
                 employee = []
                 employee.append(employees_list[0][0]) # Last Name
@@ -92,43 +90,54 @@ def UpdateEmployees():
 
 # Calculate Employee Salary
 def CalculateSalary(daily_rate, days_worked, overtime_rate, overtime_hours):
+    # Calculate base, overtime and total salary
     base_salary = daily_rate * days_worked
     overtime_salary = overtime_rate * overtime_hours
     total_salary = base_salary + overtime_salary
+
     return base_salary, overtime_salary, total_salary
 
 # Compute Payslips of Employees
 def ComputePayslip():
-    payslip_data = pd.DataFrame()
+    payslip_data = pd.DataFrame() # Dataframe to store payslip data
 
-    for employee in processed_employees_list:
-        lastName = employee[0]
-        firstName = employee[1]
-        dailyRate = float(employee[2])
-        overtimeRate = float(employee[3])
-        daysWorked = float(employee[4])
-        overtimeHours = float(employee[5])
+    if processed_employees_list: # Check if there are processed employees
+        # Iterate through each processed employee
+        for employee in processed_employees_list:
+            # Get employee data
+            lastName = employee[0]
+            firstName = employee[1]
+            dailyRate = float(employee[2])
+            overtimeRate = float(employee[3])
+            daysWorked = float(employee[4])
+            overtimeHours = float(employee[5])
 
-        baseSalary, overtimeSalary, totalSalary = CalculateSalary(dailyRate, daysWorked, overtimeRate, overtimeHours)
+            # Calculate salaries
+            baseSalary, overtimeSalary, totalSalary = CalculateSalary(dailyRate, daysWorked, overtimeRate, overtimeHours)
 
-        payslip = {
-            'Last Name': lastName,
-            'First Name': firstName,
-            'Daily Rate': dailyRate,
-            'Overtime Rate': overtimeRate,
-            'Days Worked': daysWorked,
-            'Overtime Hours': overtimeHours,
-            'Base Salary': baseSalary,
-            'Overtime Salary': overtimeSalary,
-            'Total Salary': totalSalary
-        }
+            # Create a dictionary and fill in with payslip data
+            payslip = {
+                'Last Name': lastName,
+                'First Name': firstName,
+                'Daily Rate': dailyRate,
+                'Overtime Rate': overtimeRate,
+                'Days Worked': daysWorked,
+                'Overtime Hours': overtimeHours,
+                'Base Salary': baseSalary,
+                'Overtime Salary': overtimeSalary,
+                'Total Salary': totalSalary
+            }
 
-        payslip_data = payslip_data.append(payslip, ignore_index=True)
+            # Append payslip data into Dataframe
+            payslip_data = payslip_data.append(payslip, ignore_index=True)
 
-    output_file = 'payslips.xlsx'
-    payslip_data.to_excel(output_file, index=False)
-    messagebox.showinfo("Success", f"Payslips generated and saved in {output_file}.")
-
+        # Generate Excel file and place payslip data
+        output_file = 'payslips.xlsx'
+        payslip_data.to_excel(output_file, index=False)
+        messagebox.showinfo("Success", f"Payslips generated and saved in {output_file}.")
+    
+    else:
+        messagebox.showinfo("Error", "No employees have been processed.")
 
 # Main GUI Window
 window = Tk()
