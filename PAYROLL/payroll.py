@@ -1,6 +1,7 @@
 import pandas as pd
 from tkinter import messagebox
 from tkinter import *
+from docx import Document
 
 # Days Worked Options
 days_options = [
@@ -100,6 +101,7 @@ def CalculateSalary(daily_rate, days_worked, overtime_rate, overtime_hours):
 # Compute Payslips of Employees
 def ComputePayslip():
     payslip_data = pd.DataFrame() # Dataframe to store payslip data
+    document = Document() # Word document
 
     if processed_employees_list: # Check if there are processed employees
         # Iterate through each processed employee
@@ -128,13 +130,27 @@ def ComputePayslip():
                 'Total Salary': totalSalary
             }
 
+            # Create a new page for each employee and fill with employee data
+            document.add_page_break()
+            document.add_paragraph(f"Last Name: {lastName}")
+            document.add_paragraph(f"First Name: {firstName}")
+            document.add_paragraph(f"Daily Rate: {dailyRate}")
+            document.add_paragraph(f"Overtime Rate: {overtimeRate}")
+            document.add_paragraph(f"Days Worked: {daysWorked}")
+            document.add_paragraph(f"Overtime Hours: {overtimeHours}")
+            document.add_paragraph(f"Base Salary: {baseSalary}")
+            document.add_paragraph(f"Overtime Salary: {overtimeSalary}")
+            document.add_paragraph(f"Total Salary: {totalSalary}")
+
             # Append payslip data into Dataframe
             payslip_data = payslip_data.append(payslip, ignore_index=True)
 
         # Generate Excel file and place payslip data
-        output_file = 'payslips.xlsx'
-        payslip_data.to_excel(output_file, index=False)
-        messagebox.showinfo("Success", f"Payslips generated and saved in {output_file}.")
+        excel_output_file = 'payslips.xlsx'
+        word_output_file = 'payslips.docx'
+        payslip_data.to_excel(excel_output_file, index=False)
+        document.save(word_output_file)
+        messagebox.showinfo("Success", f"Payslips generated and saved in {excel_output_file} and {word_output_file}.")
     
     else:
         messagebox.showinfo("Error", "No employees have been processed.")
