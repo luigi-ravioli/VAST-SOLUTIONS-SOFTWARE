@@ -1,4 +1,5 @@
 import pandas as pd
+import tkinter
 from tkinter import messagebox
 from tkinter import *
 from docx import Document
@@ -28,8 +29,8 @@ def InitializeEmployees():
 
     # Initialize employee labels to first employee in alphabetical order
     employees_list.sort(key=lambda x: x[0])
-    employeeLastName.config(text=employees_list[0][0])
-    employeeFirstName.config(text=employees_list[0][1])
+    #employeeLastName.config(text=employees_list[0][0])
+    #employeeFirstName.config(text=employees_list[0][1])
 
 # Process Employee with Input Data
 def ProcessEmployee():
@@ -38,8 +39,10 @@ def ProcessEmployee():
             if len(overtimeRateEntry.get()) != 0: # Check if user entered overtime rate
                 # Place user input into an employee entry
                 employee = []
-                employee.append(employees_list[0][0]) # Last Name
-                employee.append(employees_list[0][1]) # First Name
+                lastName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[0].strip()
+                firstName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[1].strip()
+                employee.append(lastName) # Last Name
+                employee.append(firstName) # First Name
                 employee.append(dailyRateEntry.get()) # Daily Rate
                 employee.append(overtimeRateEntry.get()) # Overtime Hourly Rate
                 employee.append(daysWorkedVar.get()) # Days Worked
@@ -47,7 +50,12 @@ def ProcessEmployee():
 
                 # Process employee entry
                 processed_employees_list.append(employee) # Add entry to list of processed employees
-                employees_list.pop(0) # Remove processed employee from unprocessed employees list
+                # Remove processed employee from employee list
+                for row in employees_list:
+                    if lastName in row and firstName in row:
+                        print(f'Employee {lastName} {firstName} deleted!')
+                        del employees_list[employees_list.index(row)]
+                        break
 
                 # Clear user input
                 dailyRateEntry.delete(0,END)
@@ -56,20 +64,19 @@ def ProcessEmployee():
                 overtimeHoursEntry.delete(0,END)
                 overtimeHoursEntry.insert(0, 0)
 
+                # Update displayed processed employees and dropdown menu
+                UpdateEmployees()
+                UpdateOptions()
+
                 # Check if there are employees left
                 if employees_list:
                     # Update displayed employee to process to next employee
-                    employeeLastName.config(text=employees_list[0][0])
-                    employeeFirstName.config(text=employees_list[0][1])
+                    employeeVar.set(employees_list[0])
 
                 # If all employees have been processed
                 else:
                     # Update displayed employee to N/A
-                    employeeLastName.config(text="N/A")
-                    employeeFirstName.config(text="")
-
-                # Update displayed processed employees
-                UpdateEmployees()
+                    employeeVar.set("N/A")
 
             else:
                 messagebox.showinfo("Error", "Please enter a value for Overtime Rate")
@@ -77,6 +84,14 @@ def ProcessEmployee():
             messagebox.showinfo("Error", "Please enter a value for Daily Rate")
     else:
         messagebox.showinfo("Error", "All employees have been processed")
+
+# Update Options in Dropdown Menu
+def UpdateOptions():
+    employeeEntry['menu'].delete(0, 'end') # Delete all options
+
+    # Iterate through all employees
+    for employee in employees_list:
+        employeeEntry['menu'].add_command(label=employee, command=tkinter._setit(employeeVar, employee)) # Repopulate options in dropdown menu
 
 # Update Table of Processed Employees
 def UpdateEmployees():
@@ -131,7 +146,6 @@ def ComputePayslip():
             }
 
             # Create a new page for each employee and fill with employee data
-            document.add_page_break()
             document.add_paragraph(f"Last Name: {lastName}")
             document.add_paragraph(f"First Name: {firstName}")
             document.add_paragraph(f"Daily Rate: {dailyRate}")
@@ -141,6 +155,7 @@ def ComputePayslip():
             document.add_paragraph(f"Base Salary: {baseSalary}")
             document.add_paragraph(f"Overtime Salary: {overtimeSalary}")
             document.add_paragraph(f"Total Salary: {totalSalary}")
+            document.add_page_break()
 
             # Append payslip data into Dataframe
             payslip_data = payslip_data.append(payslip, ignore_index=True)
@@ -154,6 +169,9 @@ def ComputePayslip():
     
     else:
         messagebox.showinfo("Error", "No employees have been processed.")
+
+# Initialize
+InitializeEmployees()
 
 # Main GUI Window
 window = Tk()
@@ -196,10 +214,9 @@ employeeFrame = Frame(employeeProcessingFrame, bg="white smoke")
 employeeFrame.grid(row=1, column=0, sticky=W)
 employeeLabel = Label(employeeFrame, text="Employee: ", bg="white smoke", fg="black", font="none 10")
 employeeLabel.grid(row=0, column=0, sticky=W)
-employeeLastName = Label(employeeFrame, anchor=E, textvariable="", bg="white smoke", fg="black", font="none 10")
-employeeLastName.grid(row=0, column=1, sticky=W)
-employeeFirstName = Label(employeeFrame, anchor=E, textvariable="", bg="white smoke", fg="black", font="none 10")
-employeeFirstName.grid(row=0, column=2, sticky=W)
+employeeVar = StringVar()
+employeeEntry = OptionMenu(employeeFrame, employeeVar, *employees_list)
+employeeEntry.grid(row=0, column=1, sticky=W)
 
 # Daily Rate Input Frame
 dailyRateFrame = Frame(employeeProcessingFrame, bg="white smoke")
@@ -240,5 +257,4 @@ overtimeHoursEntry.grid(row=0, column=1, sticky=W)
 submitButton = Button(employeeProcessingFrame, text="Submit", command=ProcessEmployee, relief="raised")
 submitButton.grid(row=6, column=0, sticky=W)
 
-InitializeEmployees()
 window.mainloop()
