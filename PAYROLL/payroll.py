@@ -17,6 +17,7 @@ days_options = [
 ]
 
 employees_list = []
+employees_rates = []
 processed_employees_list = []
 
 # Initialize List of Employees
@@ -24,29 +25,57 @@ def InitializeEmployees():
     # Get list of employees from text file
     employees_file = open("PAYROLL\employees.txt", "r")
     for employee in employees_file:
-        employees_list.append(employee.strip().split(" "))
+        employeeListEntry = []
+        employeeRateEntry = []
+        rateDict = {}
+        readLine = employee.strip().split(" ")
+        employeeListEntry.append(readLine[0])
+        employeeListEntry.append(readLine[1])
+        employeeListEntry.append(readLine[2])
+        rateDict["Daily Rate"] = float(readLine[3])
+        rateDict["Overtime Rate"] = float(readLine[4])
+        employeeRateEntry.append(readLine[0])
+        employeeRateEntry.append(rateDict)
+        employees_list.append(employeeListEntry)
+        employees_rates.append(employeeRateEntry)
+        
     employees_file.close()
 
-    # Initialize employee labels to first employee in alphabetical order
+    # Sort employee lists according to employee number
     employees_list.sort(key=lambda x: x[0])
-    #employeeLastName.config(text=employees_list[0][0])
-    #employeeFirstName.config(text=employees_list[0][1])
+    employees_rates.sort(key=lambda x: x[0])
+    #dailyRateLabel.config(text=f"Daily Rate: {employees_rates[1]['Daily Rate']}")
+    #overtimeRateLabel.config(text=f"Overtime Rate: {employees_rates[1]['Overtime Rate']}")
+
+def UpdateDisplayedRates(*args):
+    employeeNumber = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[0].strip()
+    print("Attempting to update displayed rates!")
+    for employee in employees_rates:
+        if employeeNumber in employee:
+            dailyRateLabel.config(text=f"Daily Rate: {employee[1]['Daily Rate']}")
+            overtimeRateLabel.config(text=f"Overtime Rate: {employee[1]['Overtime Rate']}")
+            print("Updated displayed rates!")
 
 # Process Employee with Input Data
 def ProcessEmployee():
     if employees_list: # Check if there are employees left to process
-        if len(dailyRateEntry.get()) != 0: # Check if user entered daily rate
-            if len(overtimeRateEntry.get()) != 0: # Check if user entered overtime rate
+        #if len(dailyRateEntry.get()) != 0: # Check if user entered daily rate
+            #if len(overtimeRateEntry.get()) != 0: # Check if user entered overtime rate
                 # Place user input into an employee entry
                 employee = []
-                lastName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[0].strip()
-                firstName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[1].strip()
+                employeeNumber = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[0].strip()
+                lastName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[1].strip()
+                firstName = employeeVar.get().replace("(","").replace("'", "").replace(")", "").split(",")[2].strip()
                 employee.append(lastName) # Last Name
                 employee.append(firstName) # First Name
-                employee.append(dailyRateEntry.get()) # Daily Rate
-                employee.append(overtimeRateEntry.get()) # Overtime Hourly Rate
+                for row in employees_rates:
+                    if employeeNumber in row:
+                        employee.append(row[1]['Daily Rate']) # Daily Rate
+                        employee.append(row[1]['Overtime Rate']) # Overtime Rate
                 employee.append(daysWorkedVar.get()) # Days Worked
                 employee.append(overtimeHoursEntry.get()) # Overtime Hours Rendered
+                
+
 
                 # Process employee entry
                 processed_employees_list.append(employee) # Add entry to list of processed employees
@@ -56,10 +85,15 @@ def ProcessEmployee():
                         print(f'Employee {lastName} {firstName} deleted!')
                         del employees_list[employees_list.index(row)]
                         break
+                for row in employees_rates:
+                    if employeeNumber in row:
+                        print(f'Employee {employeeNumber} deleted!')
+                        del employees_rates[employees_rates.index(row)]
+                        break
 
                 # Clear user input
-                dailyRateEntry.delete(0,END)
-                overtimeRateEntry.delete(0,END)
+                #dailyRateEntry.delete(0,END)
+                #overtimeRateEntry.delete(0,END)
                 daysWorkedVar.set(0)
                 overtimeHoursEntry.delete(0,END)
                 overtimeHoursEntry.insert(0, 0)
@@ -78,12 +112,12 @@ def ProcessEmployee():
                     # Update displayed employee to N/A
                     employeeVar.set("N/A")
 
-            else:
-                messagebox.showinfo("Error", "Please enter a value for Overtime Rate")
-        else:
-            messagebox.showinfo("Error", "Please enter a value for Daily Rate")
-    else:
-        messagebox.showinfo("Error", "All employees have been processed")
+            #else:
+                #messagebox.showinfo("Error", "Please enter a value for Overtime Rate")
+        #else:
+            #messagebox.showinfo("Error", "Please enter a value for Daily Rate")
+    #else:
+        #messagebox.showinfo("Error", "All employees have been processed")
 
 # Update Options in Dropdown Menu
 def UpdateOptions():
@@ -92,6 +126,11 @@ def UpdateOptions():
     # Iterate through all employees
     for employee in employees_list:
         employeeEntry['menu'].add_command(label=employee, command=tkinter._setit(employeeVar, employee)) # Repopulate options in dropdown menu
+
+    # Update displayed rates
+    #dailyRateLabel.config(text=f"Daily Rate: {employees_rates[0][1]['Daily Rate']}")
+    #overtimeRateLabel.config(text=f"Overtime Rate: {employees_rates[0][1]['Overtime Rate']}")
+    print("Refreshed options!")
 
 # Update Table of Processed Employees
 def UpdateEmployees():
@@ -215,24 +254,21 @@ employeeFrame.grid(row=1, column=0, sticky=W)
 employeeLabel = Label(employeeFrame, text="Employee: ", bg="white smoke", fg="black", font="none 10")
 employeeLabel.grid(row=0, column=0, sticky=W)
 employeeVar = StringVar()
+employeeVar.trace("w", UpdateDisplayedRates)
 employeeEntry = OptionMenu(employeeFrame, employeeVar, *employees_list)
 employeeEntry.grid(row=0, column=1, sticky=W)
 
 # Daily Rate Input Frame
 dailyRateFrame = Frame(employeeProcessingFrame, bg="white smoke")
 dailyRateFrame.grid(row=2, column=0, sticky=W)
-dailyRateLabel = Label(dailyRateFrame, text="Enter Daily Rate:", bg="white smoke", fg="black", font="none 10")
+dailyRateLabel = Label(dailyRateFrame, text="Daily Rate:", bg="white smoke", fg="black", font="none 10")
 dailyRateLabel.grid(row=0, column=0, sticky=W)
-dailyRateEntry = Entry(dailyRateFrame, width=10, bg="white smoke", fg="black", font="none 8")
-dailyRateEntry.grid(row=0, column=1, sticky=W)
 
 # Overtime Hourly Rate Input Frame
 overtimeRateFrame = Frame(employeeProcessingFrame, bg="white smoke")
 overtimeRateFrame.grid(row=3, column=0, sticky=W)
-overtimeRateLabel = Label(overtimeRateFrame, text="Enter Overtime Hourly Rate:", bg="white smoke", fg="black", font="none 10")
+overtimeRateLabel = Label(overtimeRateFrame, text="Overtime Hourly Rate:", bg="white smoke", fg="black", font="none 10")
 overtimeRateLabel.grid(row=0, column=0, sticky=W)
-overtimeRateEntry = Entry(overtimeRateFrame, width=10, bg="white smoke", fg="black", font="none 8")
-overtimeRateEntry.grid(row=0, column=1, sticky=W)
 
 # Days Worked Input Frame
 daysWorkedFrame = Frame(employeeProcessingFrame, bg="white smoke")
